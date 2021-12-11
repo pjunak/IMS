@@ -99,7 +99,9 @@ class gen_chips : public Event{
     }
     public: gen_chips(int mnozstvi, int cas){
 		nove_soucastky = mnozstvi;
-		cas_tvorby_SW = cas;
+		cas_tvorby_SW = Exponential(cas);
+		std::cout << cas << std::endl;
+		std::cout << cas_tvorby_SW << std::endl;
         Activate();
     }
 	int nove_soucastky;
