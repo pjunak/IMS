@@ -13,6 +13,7 @@ int denni_poptavka = 0;
 int vyrobeno_sklad = 900;
 int satisfied = 0;
 int unsatisfied = 0;
+int prodano_menicu = 0;
 
 Store Vyroba("Vyroba",max_d_vyroba);
 
@@ -50,19 +51,19 @@ class gen_vyrobna : public Event{
     }
 };
 
-class new_parts : public Process{
+class parts : public Process{
     void Behavior(){
         Wait(DAY);
         soucastky_v_zasobe += max_d_vyroba;
     }
-    public: new_parts(){
+    public: parts(){
         Activate();
     }
 };
 
 class gen_parts : public Event{
     void Behavior(){
-        new new_parts;
+        new parts;
         Activate(Time+DAY);
     }
     public: gen_parts(){
@@ -70,28 +71,26 @@ class gen_parts : public Event{
     }
 };
 
-class new_chips : public Process{
+class chips : public Process{
     void Behavior(){
         Wait(DAY);
 		if(cas_do_dokonceni_SW <= 0)
 		{
-			cipy_v_zasobe += nove_soucastky;	
+			cipy_v_zasobe += nove_cipy;	
 		}
     }
-    public: new_chips(int mnozstvi, int cas){
-		nove_soucastky = mnozstvi;
+    public: chips(int mnozstvi, int cas){
+		nove_cipy = mnozstvi;
 		cas_do_dokonceni_SW = cas;
 		Activate();
     }
-	int nove_soucastky;
+	int nove_cipy;
 	int cas_do_dokonceni_SW;
 };
 
 class gen_chips : public Event{
-
     void Behavior(){
-        new new_chips(nove_soucastky, cas_tvorby_SW);
-		std::cout << cas_tvorby_SW << std::endl;
+        new chips(nove_soucastky, cas_tvorby_SW);
 		if (cas_tvorby_SW > 0)
 		{
 			cas_tvorby_SW--;
@@ -109,29 +108,33 @@ class gen_chips : public Event{
 
 class customer : public Process{
     void Behavior(){
-        denni_poptavka+=NUBER_of_customers;
+        denni_poptavka+=number_of_daily_customers;
         Wait(DAY);
     }
-    public: customer(){
+    public: customer(int number){
+		number_of_daily_customers = number;
         Activate();
     }
+	int number_of_daily_customers;
 };
 
 class gen_customer : public Event{
     void Behavior(){
-        new customer;
+        new customer(number_of_daily_customers);
         Activate(Time+DAY);
     }
-    public: gen_customer(){
+    public: gen_customer(int number){
+		number_of_daily_customers = number;
         Activate();
     }
+	int number_of_daily_customers;
 };
 
 class customer_satisfied : public Process{
     void Behavior(){
         int timer = 0;
         time_t max_time;
-        max_time = Exponential(30);
+        max_time = 90;
         while(timer <= max_time){
             if(vyrobeno_sklad < 50){
                 Wait(DAY);
@@ -140,6 +143,7 @@ class customer_satisfied : public Process{
             else{
                 satisfied += 1;
                 vyrobeno_sklad -=50;
+				prodano_menicu += 50;
                 break;
             }
         }
@@ -164,16 +168,17 @@ class gen_customer_satisfied : public Event{
 
 int main(int argc, char **argv){
     Init(0,ENDTime);
-    new gen_customer;
+    new gen_customer(18);
     for(int i=0; i< NUBER_of_customers;i++){
         new gen_customer_satisfied;
     }
     new gen_vyrobna;
     new gen_parts;
     new gen_chips(300, 0);
-	new gen_chips(600, 90);
+	new gen_chips(600, 20);
     Run();
     Vyroba.Output();
     printf("Satisfied: %d\nUnsatisfied: %d\n",satisfied,unsatisfied);
+	printf("Prodáno měničů: %d\n",prodano_menicu);
     return EXIT_SUCCESS;
 }
