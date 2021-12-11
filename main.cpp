@@ -17,12 +17,18 @@ Store Vyroba("Vyroba",max_d_vyroba);
 
 class vyrobna : public Process{
     void Behavior(){
-        cipy_v_zasobe-=max_d_vyroba;
-        soucastky_v_zasobe-=max_d_vyroba;            
-        Enter(Vyroba,900);
+
+		int denni_vyroba = 0;
+		while(cipy_v_zasobe > 0 && soucastky_v_zasobe > 0 && denni_vyroba < 900)
+		{
+			cipy_v_zasobe-=1;
+			soucastky_v_zasobe-=1;
+			denni_vyroba+=1;
+		}
+		Enter(Vyroba,denni_vyroba);
         Wait(DAY);
-        Leave(Vyroba,900);
-        vyrobeno_sklad+=900;
+        Leave(Vyroba,denni_vyroba);
+		denni_vyroba = 0;
     }
     public: vyrobna(){
         Activate();
@@ -42,7 +48,7 @@ class gen_vyrobna : public Event{
 class new_parts : public Process{
     void Behavior(){
         Wait(DAY);
-        cipy_v_zasobe += 300;
+        cipy_v_zasobe += 900;
         soucastky_v_zasobe += max_d_vyroba;
     }
     public: new_parts(){
