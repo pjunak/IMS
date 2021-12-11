@@ -78,7 +78,6 @@ class gen_demand : public Event{
 };
 
 
-//not done
 class demand_un_satisfied : public Process{
     void Behavior(){
         int timer = 0;
@@ -111,7 +110,7 @@ class gen_demand_un_satisfied : public Event{
 };
 
 int main(int argc, char **argv){
-    Init(0,356);
+    Init(0,ENDTime);
     new gen_demand;
     for(int i=0; i< DAY_demand;i++){
         new gen_demand_un_satisfied;
@@ -123,4 +122,3 @@ int main(int argc, char **argv){
 
     return EXIT_SUCCESS;
 }
-
