@@ -71,28 +71,40 @@ class gen_parts : public Event{
 };
 
 class new_chips : public Process{
-    int dt;
     void Behavior(){
         Wait(DAY);
-        soucastky_v_zasobe += dt;
-        
+		if(cas_do_dokonceni_SW <= 0)
+		{
+			cipy_v_zasobe += nove_soucastky;	
+		}
     }
-    public: new_chips(int d){
-        dt = d;
-        Activate();
+    public: new_chips(int mnozstvi, int cas){
+		nove_soucastky = mnozstvi;
+		cas_do_dokonceni_SW = cas;
+		Activate();
     }
+	int nove_soucastky;
+	int cas_do_dokonceni_SW;
 };
 
 class gen_chips : public Event{
-    int dt;
+
     void Behavior(){
-        new new_chips(dt);
-        //std::cout << dt << std::endl;
+        new new_chips(nove_soucastky, cas_tvorby_SW);
+		std::cout << cas_tvorby_SW << std::endl;
+		if (cas_tvorby_SW > 0)
+		{
+			cas_tvorby_SW--;
+		}
         Activate(Time+DAY);
     }
-    public: gen_chips(int d): dt(d){
+    public: gen_chips(int mnozstvi, int cas){
+		nove_soucastky = mnozstvi;
+		cas_tvorby_SW = cas;
         Activate();
     }
+	int nove_soucastky;
+	int cas_tvorby_SW;
 };
 
 class customer : public Process{
@@ -158,7 +170,8 @@ int main(int argc, char **argv){
     }
     new gen_vyrobna;
     new gen_parts;
-    new gen_chips(900);
+    new gen_chips(300, 0);
+	new gen_chips(600, 90);
     Run();
     Vyroba.Output();
     printf("Satisfied: %d\nUnsatisfied: %d\n",satisfied,unsatisfied);
