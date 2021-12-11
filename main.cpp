@@ -175,7 +175,7 @@ int main(int argc, char **argv){
     new gen_vyrobna;
     new gen_parts;
     new gen_chips(300, 0);
-	new gen_chips(600, 20);
+	new gen_chips(600, 60);
     Run();
     Vyroba.Output();
     printf("Satisfied: %d\nUnsatisfied: %d\n",satisfied,unsatisfied);
