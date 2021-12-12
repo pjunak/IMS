@@ -14,9 +14,42 @@ int vyrobeno_sklad = 900;
 int satisfied = 0;
 int unsatisfied = 0;
 int prodano_menicu = 0;
+int impatient = 0;
 
 Store Vyroba("Vyroba",max_d_vyroba);
+Queue Fronta("cekajici zakaznici");
 
+class Timeout : public Event {
+    Process *ptr;
+    public: Timeout(double t, Process *p): ptr(p){
+        Activate(Time+t);
+    }
+    void Behavior(){
+        delete ptr;
+        impatient++;
+    }
+};
+
+class customer_satisfied : public Process{
+    void Behavior(){
+        Event *timeout = new Timeout(30,this);
+        Into(Fronta);
+        Passivate();
+    }
+    public: customer_satisfied(){
+        Activate();
+    }
+};
+
+class gen_customer_satisfied : public Event{
+    void Behavior(){
+        new customer_satisfied;
+        Activate(Time+DAY);
+    }
+    public: gen_customer_satisfied(){
+        Activate();
+    }
+};
 class vyrobna : public Process{
     void Behavior(){
 		int denni_vyroba = 0;
@@ -34,6 +67,16 @@ class vyrobna : public Process{
 			cipy_v_zasobe-=denni_vyroba;
 			soucastky_v_zasobe-=denni_vyroba;
 			vyrobeno_sklad+=denni_vyroba;
+            std::cout << "test" << std::endl;
+            for( Queue::iterator p = Fronta.begin(); p != Fronta.end(); ++p){
+                Print("%d",p);
+                customer_satisfied *z = (customer_satisfied*)(*p);
+                if(vyrobeno_sklad > 50){
+                    z->Out();
+                    z->Activate();
+                    vyrobeno_sklad-=50;
+                }
+            }
 		}
     }
     public: vyrobna(){
@@ -130,42 +173,6 @@ class gen_customer : public Event{
         Activate();
     }
 	int number_of_daily_customers;
-};
-
-class customer_satisfied : public Process{
-    void Behavior(){
-        int timer = 0;
-        time_t max_time;
-        max_time = 90;
-        while(timer <= max_time){
-            if(vyrobeno_sklad < 50){
-                Wait(DAY);
-                timer += DAY;
-            }
-            else{
-                satisfied += 1;
-                vyrobeno_sklad -=50;
-				prodano_menicu += 50;
-                break;
-            }
-        }
-        if(timer > max_time){
-            unsatisfied += 1;
-        }
-    }
-    public: customer_satisfied(){
-        Activate();
-    }
-};
-
-class gen_customer_satisfied : public Event{
-    void Behavior(){
-        new customer_satisfied;
-        Activate(Time+DAY);
-    }
-    public: gen_customer_satisfied(){
-        Activate();
-    }
 };
 
 int main(int argc, char **argv){
