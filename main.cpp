@@ -12,7 +12,6 @@ int vyrobeno_sklad = 900;
 int satisfied = 0;
 int unsatisfied = 0;
 int prodano_menicu = 0;
-int impatient = 0;
 
 Store Vyroba("Vyroba",max_d_vyroba);
 Queue Fronta("Čekajici zakaznici");
@@ -25,7 +24,6 @@ class Timeout : public Event {
     void Behavior(){
 		unsatisfied += 1;
         delete ptr;
-        impatient++;
     }
 };
 
@@ -93,11 +91,11 @@ class vyrobna : public Process{
             else{
                 denni_vyroba = max_d_vyroba;
             }
+			cipy_v_zasobe-=denni_vyroba;
+			soucastky_v_zasobe-=denni_vyroba;
             Enter(Vyroba,denni_vyroba);
             Wait(DAY);
             Leave(Vyroba,denni_vyroba);
-			cipy_v_zasobe-=denni_vyroba;
-			soucastky_v_zasobe-=denni_vyroba;
 			vyrobeno_sklad+=denni_vyroba;
 		}
     }
@@ -183,12 +181,14 @@ int main(int argc, char **argv){
 	RandomSeed(time(NULL));
     new gen_vyrobna;
     new gen_parts;
-    new gen_chips((argc > 3) ? 300 : 900, 0);
-	new gen_customer((argc > 2) ? atoi(argv[2]) : 18, (argc > 3) ? atoi(argv[3]) : 90);
-	if(argc > 3)
+	new gen_chips((argc > 4) ? 300 : 900, 0);
+	if(argc > 4 && atoi(argv[4]) != 0)
 	{
 		new gen_chips(600, (argc > 4) ? atoi(argv[4]) : 60);
 	}
+	new gen_customer((argc > 2) ? atoi(argv[2]) : 18, (argc > 3) ? atoi(argv[3]) : 90);
+
+
     Run();
     Vyroba.Output();
     Fronta.Output();
