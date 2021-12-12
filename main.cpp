@@ -1,7 +1,6 @@
-
 #include <simlib.h>
 #include <iostream>
-
+#include <cmath>
 
 #define ENDTime 364
 #define NUBER_of_customers 18
@@ -17,7 +16,7 @@ int prodano_menicu = 0;
 int impatient = 0;
 
 Store Vyroba("Vyroba",max_d_vyroba);
-Queue Fronta("cekajici zakaznici");
+Queue Fronta("Čekajici zakaznici");
 
 class Timeout : public Event {
     Process *ptr;
@@ -149,9 +148,16 @@ class gen_chips : public Event{
 		}
         Activate(Time+DAY);
     }
-    public: gen_chips(int mnozstvi, int cas){
+    public: gen_chips(int mnozstvi, double cas){
 		nove_soucastky = mnozstvi;
-		cas_tvorby_SW = Exponential(cas);
+		if(cas != 0)
+		{
+
+			cas_tvorby_SW = round(Normal(cas, (cas/10)));
+		}else
+		{
+			cas_tvorby_SW = 0;
+		}
 		std::cout << cas << std::endl;
 		std::cout << cas_tvorby_SW << std::endl;
         Activate();
@@ -186,6 +192,7 @@ class gen_customer : public Event{
 
 int main(int argc, char **argv){
     Init(0,ENDTime);
+	RandomSeed(time(NULL));
     new gen_customer(18);
     for(int i=0; i< NUBER_of_customers;i++){
         new gen_sell;
