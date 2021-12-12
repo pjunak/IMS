@@ -69,12 +69,12 @@ class vyrobna : public Process{
 			vyrobeno_sklad+=denni_vyroba;
             std::cout << "test" << std::endl;
             for( Queue::iterator p = Fronta.begin(); p != Fronta.end(); ++p){
-                Print("%d",p);
                 customer_satisfied *z = (customer_satisfied*)(*p);
-                if(vyrobeno_sklad > 50){
+                if(vyrobeno_sklad > 50 && z == nullptr){
                     z->Out();
-                    z->Activate();
                     vyrobeno_sklad-=50;
+                    prodano_menicu+=50;
+                    z->Activate();
                 }
             }
 		}
@@ -187,6 +187,7 @@ int main(int argc, char **argv){
 	new gen_chips(600, 60);
     Run();
     Vyroba.Output();
+    Fronta.Output();
     printf("Satisfied: %d\nUnsatisfied: %d\n",satisfied,unsatisfied);
 	printf("Prodáno měničů: %d\n",prodano_menicu);
     return EXIT_SUCCESS;
