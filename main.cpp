@@ -8,7 +8,7 @@
 const int max_d_vyroba = 900;
 int cipy_v_zasobe = 6300;
 int soucastky_v_zasobe = 6300;
-int denni_poptavka = 0;
+int denni_poptavka = 18;
 int vyrobeno_sklad = 900;
 int satisfied = 0;
 int unsatisfied = 0;
@@ -24,49 +24,60 @@ class Timeout : public Event {
         Activate(Time+t);
     }
     void Behavior(){
+		unsatisfied += 1;
         delete ptr;
         impatient++;
     }
 };
 
-class sell : public Process{
+class customer : public Process{
     void Behavior(){
-        timeout = new Timeout(30,this);
+        timeout = new Timeout(avg_wait_time,this);
         if(vyrobeno_sklad < 50){
             Into(Fronta);
             Passivate();
-            Wait(DAY);
         }
         else{
             delete timeout;
             vyrobeno_sklad-=50;
             prodano_menicu+=50;
+			satisfied += 1;
         }
         for( Queue::iterator p = Fronta.begin(); p != Fronta.end(); ++p){
-            sell *z = (sell*)(*p);
+            customer *z = (customer*)(*p);
             if(vyrobeno_sklad > 50 && z != nullptr){
                 z->Out();
                 delete z->timeout;
                 vyrobeno_sklad-=50;
                 prodano_menicu+=50;
+				satisfied += 1;
                 z->Activate();
             }
         }
     }
-    public: sell(){
+    public: customer(int t){
+		avg_wait_time = round(Normal(t,(t/10)));
         Activate();
     }
     Event *timeout;
+	int avg_wait_time;
 };
 
-class gen_sell : public Event{
+class gen_customer : public Event{
     void Behavior(){
-        new sell;
-        Activate(Time+DAY);
+		for (int i = 0; i < daily; i++)
+		{
+			new customer(avg_wait_time);
+			Activate(Time+DAY);
+		}
     }
-    public: gen_sell(){
-        Activate();
+    public: gen_customer(int d, int t){
+		daily = d;
+		avg_wait_time = t;
+		Activate();
     }
+	int daily;
+	int avg_wait_time;
 };
 class vyrobna : public Process{
     void Behavior(){
@@ -158,49 +169,20 @@ class gen_chips : public Event{
 		{
 			cas_tvorby_SW = 0;
 		}
-		std::cout << cas << std::endl;
-		std::cout << cas_tvorby_SW << std::endl;
         Activate();
     }
 	int nove_soucastky;
 	int cas_tvorby_SW;
 };
 
-class customer : public Process{
-    void Behavior(){
-        denni_poptavka+=number_of_daily_customers;
-        Wait(DAY);
-    }
-    public: customer(int number){
-		number_of_daily_customers = number;
-        Activate();
-    }
-	int number_of_daily_customers;
-};
-
-class gen_customer : public Event{
-    void Behavior(){
-        new customer(number_of_daily_customers);
-        Activate(Time+DAY);
-    }
-    public: gen_customer(int number){
-		number_of_daily_customers = number;
-        Activate();
-    }
-	int number_of_daily_customers;
-};
-
 int main(int argc, char **argv){
     Init(0,ENDTime);
 	RandomSeed(time(NULL));
-    new gen_customer(18);
-    for(int i=0; i< NUBER_of_customers;i++){
-        new gen_sell;
-    }
+	new gen_customer(atoi(argv[1]), atoi(argv[2]));
     new gen_vyrobna;
     new gen_parts;
     new gen_chips(300, 0);
-	new gen_chips(600, 60);
+	new gen_chips(600, atoi(argv[3]));
     Run();
     Vyroba.Output();
     Fronta.Output();
