@@ -30,23 +30,42 @@ class Timeout : public Event {
     }
 };
 
-class customer_satisfied : public Process{
+class sell : public Process{
     void Behavior(){
-        Event *timeout = new Timeout(30,this);
-        Into(Fronta);
-        Passivate();
+        timeout = new Timeout(30,this);
+        if(vyrobeno_sklad < 50){
+            Into(Fronta);
+            Passivate();
+            Wait(DAY);
+        }
+        else{
+            delete timeout;
+            vyrobeno_sklad-=50;
+            prodano_menicu+=50;
+        }
+        for( Queue::iterator p = Fronta.begin(); p != Fronta.end(); ++p){
+            sell *z = (sell*)(*p);
+            if(vyrobeno_sklad > 50 && z != nullptr){
+                z->Out();
+                delete z->timeout;
+                vyrobeno_sklad-=50;
+                prodano_menicu+=50;
+                z->Activate();
+            }
+        }
     }
-    public: customer_satisfied(){
+    public: sell(){
         Activate();
     }
+    Event *timeout;
 };
 
-class gen_customer_satisfied : public Event{
+class gen_sell : public Event{
     void Behavior(){
-        new customer_satisfied;
+        new sell;
         Activate(Time+DAY);
     }
-    public: gen_customer_satisfied(){
+    public: gen_sell(){
         Activate();
     }
 };
@@ -67,16 +86,6 @@ class vyrobna : public Process{
 			cipy_v_zasobe-=denni_vyroba;
 			soucastky_v_zasobe-=denni_vyroba;
 			vyrobeno_sklad+=denni_vyroba;
-            std::cout << "test" << std::endl;
-            for( Queue::iterator p = Fronta.begin(); p != Fronta.end(); ++p){
-                customer_satisfied *z = (customer_satisfied*)(*p);
-                if(vyrobeno_sklad > 50 && z == nullptr){
-                    z->Out();
-                    vyrobeno_sklad-=50;
-                    prodano_menicu+=50;
-                    z->Activate();
-                }
-            }
 		}
     }
     public: vyrobna(){
@@ -179,7 +188,7 @@ int main(int argc, char **argv){
     Init(0,ENDTime);
     new gen_customer(18);
     for(int i=0; i< NUBER_of_customers;i++){
-        new gen_customer_satisfied;
+        new gen_sell;
     }
     new gen_vyrobna;
     new gen_parts;
