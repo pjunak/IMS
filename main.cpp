@@ -192,7 +192,7 @@ int main(int argc, char **argv){
     Run();
     Vyroba.Output();
     Fronta.Output();
-	Print("Na konci obdobé zbylo na interních skladech:\n%d čipů\n%d ostatních součástek\n%d neprodaných měničů\n", cipy_v_zasobe, soucastky_v_zasobe, vyrobeno_sklad);
+	Print("Na konci období zbylo na interních skladech:\n%d čipů\n%d ostatních součástek\n%d neprodaných měničů\n", cipy_v_zasobe, soucastky_v_zasobe, vyrobeno_sklad);
     Print("Satisfied: %d\nUnsatisfied: %d\n",satisfied,unsatisfied);
 	Print("Prodáno měničů: %d\n",prodano_menicu);
 	Print("Odhadovaný přibližný obrat z prodeje: %d Euro\n",prodano_menicu*8000/25);
